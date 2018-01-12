@@ -11,13 +11,9 @@
 
     <properties>
         <javax_persistence.ver>2.2.0-release</javax_persistence.ver>
+        <maven-surefire-plugin.version>2.12.2</maven-surefire-plugin.version>
         <dn.core.min.ver>5.0.1</dn.core.min.ver>
         <dn.core.max.ver>5.1.99</dn.core.max.ver>
-        <dn.api_jpa.min.ver>5.0.1</dn.api_jpa.min.ver>
-        <dn.api_jpa.max.ver>5.1.99</dn.api_jpa.max.ver>
-        <dn.datastore.min.ver>5.0.1</dn.datastore.min.ver>
-        <dn.datastore.max.ver>5.1.99</dn.datastore.max.ver>
-        <dn.maven.plugin.ver>5.0.2</dn.maven.plugin.ver>
     </properties>
 
     <dependencies>
@@ -31,17 +27,6 @@
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-core</artifactId>
             <version>[${dn.core.min.ver}, ${dn.core.max.ver})</version>
-        </dependency>
-        <dependency>
-            <groupId>org.datanucleus</groupId>
-            <artifactId>datanucleus-api-jpa</artifactId>
-            <version>[${dn.api_jpa.min.ver}, ${dn.api_jpa.max.ver})</version>
-        </dependency>
-        <!-- Change to the datanucleus-{datastore} plugin required -->
-        <dependency>
-            <groupId>org.datanucleus</groupId>
-            <artifactId>datanucleus-rdbms</artifactId>
-            <version>[${dn.datastore.min.ver}, ${dn.datastore.max.ver})</version>
         </dependency>
 
         <!-- Change to the datastore driver required for your datastore -->
@@ -66,6 +51,7 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
                 <version>2.5</version>
                 <configuration>
@@ -88,6 +74,7 @@
             </plugin>
 
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
                 <configuration>
@@ -98,30 +85,9 @@
             </plugin>
 
             <plugin>
-                <groupId>org.datanucleus</groupId>
-                <artifactId>datanucleus-maven-plugin</artifactId>
-                <version>${dn.maven.plugin.ver}</version>
-                <configuration>
-                    <api>JPA</api>
-                    <persistenceUnitName>MyTest</persistenceUnitName>
-                    <fork>false</fork>
-                    <verbose>false</verbose>
-                    <log4jConfiguration>${basedir}/src/main/resources/log4j.properties</log4jConfiguration>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>enhance</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.12.2</version>
+                <version>${maven-surefire-plugin.version}</version>
                 <configuration>
                     <includes>
                         <include>**/*Test.java</include>
@@ -130,5 +96,178 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>datanucleus</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <dn.api_jpa.min.ver>5.0.1</dn.api_jpa.min.ver>
+                <dn.api_jpa.max.ver>5.1.99</dn.api_jpa.max.ver>
+                <dn.datastore.min.ver>5.0.1</dn.datastore.min.ver>
+                <dn.datastore.max.ver>5.1.99</dn.datastore.max.ver>
+                <dn.maven.plugin.ver>5.0.2</dn.maven.plugin.ver>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.datanucleus</groupId>
+                    <artifactId>datanucleus-api-jpa</artifactId>
+                    <version>[${dn.api_jpa.min.ver}, ${dn.api_jpa.max.ver})</version>
+                </dependency>
+                <!-- Change to the datanucleus-{datastore} plugin required -->
+                <dependency>
+                    <groupId>org.datanucleus</groupId>
+                    <artifactId>datanucleus-rdbms</artifactId>
+                    <version>[${dn.datastore.min.ver}, ${dn.datastore.max.ver})</version>
+                </dependency>
+
+            </dependencies>
+            <build>
+                <plugins>
+
+                    <plugin>
+                        <groupId>org.datanucleus</groupId>
+                        <artifactId>datanucleus-maven-plugin</artifactId>
+                        <version>${dn.maven.plugin.ver}</version>
+                        <configuration>
+                            <api>JPA</api>
+                            <persistenceUnitName>MyTest_DN</persistenceUnitName>
+                            <fork>false</fork>
+                            <verbose>false</verbose>
+                            <log4jConfiguration>${basedir}/src/main/resources/log4j.properties</log4jConfiguration>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>enhance</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <!-- Unit Testing -->
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${maven-surefire-plugin.version}</version>
+                        <configuration>
+                            <includes>
+                                <include>**/*Test.java</include>
+                            </includes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>default-test</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <systemPropertyVariables>
+                                        <profile>${project.activeProfiles[0].id}</profile>
+                                    </systemPropertyVariables>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>eclipselink</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <eclipselink.version>2.7.1</eclipselink.version>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.eclipse.persistence</groupId>
+                    <artifactId>eclipselink</artifactId>
+                    <version>${eclipselink.version}</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <!-- Unit Testing -->
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${maven-surefire-plugin.version}</version>
+                        <configuration>
+                            <includes>
+                                <include>**/*Test.java</include>
+                            </includes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>default-test</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <systemPropertyVariables>
+                                        <profile>${project.activeProfiles[0].id}</profile>
+                                    </systemPropertyVariables>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>hibernate</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <hibernate-core.version>5.2.12.Final</hibernate-core.version>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-core</artifactId>
+                    <version>${hibernate-core.version}</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <!-- Unit Testing -->
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${maven-surefire-plugin.version}</version>
+                        <configuration>
+                            <includes>
+                                <include>**/*Test.java</include>
+                            </includes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>default-test</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <systemPropertyVariables>
+                                        <org.jboss.logging.provider>jdk</org.jboss.logging.provider>
+                                        <profile>${project.activeProfiles[0].id}</profile>
+                                    </systemPropertyVariables>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+    </profiles>
 
 </project>
