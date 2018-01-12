@@ -1,13 +1,16 @@
-test-jpa
+dn-issue-updating-entity-with-set-in-name
 ========
 
-Template project for any user testcase using JPA. 
-To create a DataNucleus test simply fork this project, and add/edit as necessary to add your model and persistence commands.
-The files that you'll likely need to edit are
+JPA Test case demonstrating an issue I (and a colleague of mine) reported to DataNucleus folks: https://github.com/datanucleus/datanucleus-core/issues/274
 
-* <a href="https://github.com/datanucleus/test-jpa/tree/master/src/main/java/mydomain/model">src/main/java/mydomain/model/</a>   **[Put your model classes here]**
-* <a href="https://github.com/datanucleus/test-jpa/blob/master/src/main/resources/META-INF/persistence.xml">src/main/resources/META-INF/persistence.xml</a>   **[Put your datastore details in here]**
-* <a href="https://github.com/datanucleus/test-jpa/blob/master/src/test/java/org/datanucleus/test/SimpleTest.java">src/test/java/org/datanucleus/test/SimpleTest.java</a>   **[Edit this if a single-thread test is required]**
-* <a href="https://github.com/datanucleus/test-jpa/blob/master/src/test/java/org/datanucleus/test/MultithreadTest.java">src/test/java/org/datanucleus/test/MultithreadTest.java</a>   **[Edit this if a multi-thread test is required]**
+In a nutshell, the test case tries to execute a simple JPQL UPDATE Query against a domain class that contains 'Set' in the name.
 
-To run this, simply type "mvn clean compile test"
+This test case contains a set of Maven profiles that run the same tests against other JPA providers. The tests pass as expected with EclipseLink and Hibernate, but not with DataNucleus.
+
+- To run the tests against DataNucleus (default profile): `mvn clean compile test` or `mvn clean compile test -P datanucleus`
+
+- To run the tests against EclipseLink: `mvn clean compile test -P eclipselink`
+
+- To run the tests against Hibernate: `mvn clean compile test -P hibernate`
+
+
