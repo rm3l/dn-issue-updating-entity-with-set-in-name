@@ -6,7 +6,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
-import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.metamodel.Type;
+
 import mydomain.model.Person;
 import mydomain.model.Setting;
 import org.datanucleus.util.NucleusLogger;
@@ -28,10 +29,10 @@ public class SimpleTest {
 
   @BeforeClass
   public static void setUpClass() {
-    final Profile profile = Profile.valueOf(
-        System.getProperty("profile", Profile.DATANUCLEUS.name()).toUpperCase());
     entityManagerFactory =
-        Persistence.createEntityManagerFactory("MyTest_" + profile.abbrev);
+        Persistence.createEntityManagerFactory(
+                "mytest_" +
+                        System.getProperty("profile", "datanucleus").toLowerCase());
   }
 
   @AfterClass
@@ -54,15 +55,13 @@ public class SimpleTest {
 
     //Wipe everything out
     executeInTransaction(() -> {
-      final CriteriaDelete<Person> personCriteriaDelete = entityManager.getCriteriaBuilder()
-          .createCriteriaDelete(Person.class);
-      personCriteriaDelete.from(Person.class);
-      entityManager.createQuery(personCriteriaDelete).executeUpdate();
-
-      final CriteriaDelete<Setting> settingCriteriaDelete = entityManager.getCriteriaBuilder()
-          .createCriteriaDelete(Setting.class);
-      settingCriteriaDelete.from(Setting.class);
-      entityManager.createQuery(settingCriteriaDelete).executeUpdate();
+      entityManager.getMetamodel().getEntities()
+              .stream()
+              .map(Type::getJavaType)
+              .forEach(type ->
+                      entityManager.createQuery(
+                                  String.format("DELETE FROM %s t", type.getCanonicalName()))
+                              .executeUpdate());
     });
     entityManager.close();
   }
@@ -71,6 +70,7 @@ public class SimpleTest {
   @Test
   public void testUpdatePerson() {
     final Person person = new Person();
+    person.setId(1L);
     person.setEmail("a@b.cd");
     person.setFirstName("Luke");
     person.setLastName("Skywalker");
@@ -98,24 +98,25 @@ public class SimpleTest {
   @Test
   public void testUpdateSetting_doesNotWorkWithDN() {
     final Setting setting = new Setting();
-    setting.setKey("myKey");
-    setting.setValue("myValue");
+    setting.setId(1L);
+    setting.setSettingKey("myKey");
+    setting.setSettingValue("myValue");
     executeInTransaction(() -> entityManager.persist(setting));
 
     Setting settingFromDB = entityManager.find(Setting.class, setting.getId());
-    Assert.assertEquals("myKey", settingFromDB.getKey());
-    Assert.assertEquals("myValue", settingFromDB.getValue());
+    Assert.assertEquals("myKey", settingFromDB.getSettingKey());
+    Assert.assertEquals("myValue", settingFromDB.getSettingValue());
 
     //Now try to execute an UPDATE query
     executeInTransaction(() -> entityManager
-        .createQuery("UPDATE Setting s SET s.value = :valueToSet WHERE s.id = :id")
+        .createQuery("UPDATE Setting s SET s.settingValue = :valueToSet WHERE s.id = :id")
         .setParameter("valueToSet", "my.new.value")
         .setParameter("id", setting.getId())
         .executeUpdate());
 
     settingFromDB = entityManager.find(Setting.class, setting.getId());
-    Assert.assertEquals("myKey", settingFromDB.getKey());
-    Assert.assertEquals("my.new.value", settingFromDB.getValue());
+    Assert.assertEquals("myKey", settingFromDB.getSettingKey());
+    Assert.assertEquals("my.new.value", settingFromDB.getSettingValue());
   }
 
   private void executeInTransaction(final Runnable operation) {
@@ -134,22 +135,6 @@ public class SimpleTest {
       if (tx.isActive()) {
         tx.rollback();
       }
-    }
-  }
-
-  @SuppressWarnings({"unused", "SpellCheckingInspection"})
-  private enum Profile {
-
-    DATANUCLEUS("DN"),
-
-    ECLIPSELINK("EL"),
-
-    HIBERNATE("HN");
-
-    public final String abbrev;
-
-    Profile(final String abbrev) {
-      this.abbrev = abbrev;
     }
   }
 }

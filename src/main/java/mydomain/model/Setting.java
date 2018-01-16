@@ -1,30 +1,22 @@
 package mydomain.model;
 
 import java.util.Objects;
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 
 @Entity
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"setting_key", "setting_value"}))
 public class Setting {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
   private Long id;
 
   @Basic
   @Column(name = "setting_key", nullable = false)
-  private String key;
+  private String settingKey;
 
   @Basic
   @Column(name = "setting_value")
-  private String value;
+  private String settingValue;
 
   public Long getId() {
     return id;
@@ -34,20 +26,20 @@ public class Setting {
     this.id = id;
   }
 
-  public String getKey() {
-    return key;
+  public String getSettingKey() {
+    return settingKey;
   }
 
-  public void setKey(String key) {
-    this.key = key;
+  public void setSettingKey(String settingKey) {
+    this.settingKey = settingKey;
   }
 
-  public String getValue() {
-    return value;
+  public String getSettingValue() {
+    return settingValue;
   }
 
-  public void setValue(String value) {
-    this.value = value;
+  public void setSettingValue(String settingValue) {
+    this.settingValue = settingValue;
   }
 
   @Override
@@ -59,22 +51,22 @@ public class Setting {
       return false;
     }
     Setting setting = (Setting) o;
-    return Objects.equals(getKey(), setting.getKey()) &&
-        Objects.equals(getValue(), setting.getValue());
+    return Objects.equals(getSettingKey(), setting.getSettingKey()) &&
+        Objects.equals(getSettingValue(), setting.getSettingValue());
   }
 
   @Override
   public int hashCode() {
 
-    return Objects.hash(getKey(), getValue());
+    return Objects.hash(getSettingKey(), getSettingValue());
   }
 
   @Override
   public String toString() {
     return "Setting{" +
         "id=" + id +
-        ", key='" + key + '\'' +
-        ", value='" + value + '\'' +
+        ", settingKey='" + settingKey + '\'' +
+        ", settingValue='" + settingValue + '\'' +
         '}';
   }
 }
